@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Straddie News Initiative | Strategic Research Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Modern Fonts: Manrope (Headings) & Inter (Body/Fine Print) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Modern Coastal Theme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'straddie-bg': '#F8FAFC', // Slate 50 - Crisp & Clean
+                        'straddie-surface': '#FFFFFF',
+                        'straddie-text-main': '#1E293B', // Slate 800 - High Contrast
+                        'straddie-text-muted': '#475569', // Slate 600 - Readable Grey
+                        'straddie-primary': '#0284C7', // Sky 600 - Vibrant Action
+                        'straddie-secondary': '#0F766E', // Teal 700 - Nature/Land
+                        'straddie-accent': '#F59E0B', // Amber 500 - Attention
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Manrope', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                        'hover': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #F8FAFC; color: #1E293B; }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 320px; /* Slightly taller for legibility */
+            margin: 0 auto;
+        }
+        
+        .card-base {
+            background-color: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            border-color: #CBD5E1;
+        }
+
+        .nav-item {
+            position: relative;
+            padding-bottom: 2px;
+        }
+        
+        .active-tab {
+            color: #0284C7;
+            font-weight: 600;
+        }
+        
+        .active-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #0284C7;
+        }
+
+        /* Improved Readability Utilities */
+        .text-fine {
+            font-size: 0.925rem; /* Larger than standard xs/sm */
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col selection:bg-sky-100 selection:text-sky-900">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-18">
+                <div class="flex items-center py-4">
+                    <span class="text-2xl font-display font-extrabold text-slate-900 tracking-tight">Straddie<span class="text-straddie-primary">News</span></span>
+                </div>
+                <div class="hidden sm:flex space-x-10 items-center" id="nav-container">
+                    <!-- Nav items injected by JS -->
+                </div>
+                <div class="flex sm:hidden items-center">
+                    <button id="mobile-menu-btn" class="p-2 rounded-md text-slate-600 hover:bg-slate-100 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden sm:hidden bg-white border-b border-slate-200 shadow-lg">
+            <div class="px-4 pt-2 pb-4 space-y-2" id="mobile-nav-container"></div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto px-4 py-10 max-w-7xl">
+        
+        <!-- INTRO CONTEXT -->
+        <section id="intro-context" class="mb-12 text-center max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-5xl font-display font-bold text-slate-900 mb-6 tracking-tight">Community Onboarding & Research</h1>
+            <p class="text-lg md:text-xl text-slate-600 leading-relaxed font-light">
+                Strategic framework for the <strong>Straddie News</strong> initiative. 
+                Use this dashboard to coordinate stakeholder engagement, manage grant applications, and monitor community sentiment on critical issues.
+            </p>
+        </section>
+
+        <!-- Dynamic View Container -->
+        <div id="app-view" class="transition-opacity duration-200 ease-in-out">
+            <!-- Content will be injected here based on state -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-16">
+        <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center text-slate-500 text-sm">
+                <p>&copy; 2025 Straddie News Initiative.</p>
+                <p class="mt-2 md:mt-0">Internal Research Document • Version 2.1</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- DATA STORE ---
+        const appData = {
+            currentView: 'stakeholders',
+            stakeholders: [
+                {
+                    id: 'mmeicac',
+                    name: 'MMEICAC',
+                    full_name: 'Minjerribah Moorgumpin Elders-in-Council',
+                    type: 'Indigenous Leadership',
+                    role: 'Cultural Authority & Heritage',
+                    strategy: 'Establish formal MOU for cultural guidance. Focus on oral history recording and language preservation projects.',
+                    grant_link: 'Indigenous Language Grants',
+                    status: 'High Priority'
+                },
+                {
+                    id: 'qyac',
+                    name: 'QYAC',
+                    full_name: 'Quandamooka Yoolooburrabee Aboriginal Corp',
+                    type: 'Land Council / Admin',
+                    role: 'Native Title & Land Management',
+                    strategy: 'Request regular press briefings. Address transparency concerns through fact-based reporting on decision-making processes.',
+                    grant_link: 'Regional Infrastructure',
+                    status: 'Complex Relationship'
+                },
+                {
+                    id: 'chamber',
+                    name: 'Chamber of Commerce',
+                    full_name: 'Straddie Chamber of Commerce',
+                    type: 'Business',
+                    role: 'Economic Development',
+                    strategy: 'Partner for "Local Business Spotlight" segments. Discuss advertising model and tourism promotion.',
+                    grant_link: 'Small Business Grants',
+                    status: 'Potential Funder'
+                },
+                {
+                    id: 'arts',
+                    name: 'Local Artists',
+                    full_name: 'Island Arts Collective',
+                    type: 'Community',
+                    role: 'Cultural Content',
+                    strategy: 'Showcase galleries, pottery, and weaving. Source of visual content for video segues.',
+                    grant_link: 'Arts Queensland',
+                    status: 'Content Partner'
+                }
+            ],
+            contentStrategy: {
+                labels: ['Local News & Governance', 'Arts & Culture', 'Sports & Rec', 'Edutainment', 'Business/Tourism'],
+                data: [25, 30, 15, 20, 10],
+                descriptions: [
+                    "Reporting on Council, QYAC, Transport, and Infrastructure.",
+                    "Galleries, Music, Comedy, Indigenous Art, and Cinema events.",
+                    "Local footy, surfing comps, bowls club updates.",
+                    "History segments, Language lessons, Environmental education.",
+                    "Spotlights on local entrepreneurs and tourism hotspots."
+                ]
+            },
+            grants: [
+                { category: 'Arts', name: 'Arts Queensland', value: 25000, focus: 'Creative development' },
+                { category: 'Indigenous', name: 'Indigenous Languages & Arts', value: 40000, focus: 'Language preservation' },
+                { category: 'Community', name: 'Gambling Community Benefit', value: 35000, focus: 'Equipment (Cameras/Audio)' },
+                { category: 'Regional', name: 'Building Better Regions', value: 50000, focus: 'Job creation & Infrastructure' }
+            ],
+            hotTopics: [
+                {
+                    id: 'whale',
+                    title: 'Whale on a Hill',
+                    heat: 85, // 0-100 scale
+                    summary: "The whale sculpture placement is divisive. Conflict exists between aesthetic/tourist appeal and site significance/local consultation.",
+                    reporting_angle: "Host a moderated town hall (recorded). Interview elders from MMEICAC and QYAC reps separately. Focus on the consultation process history."
+                },
+                {
+                    id: 'transparency',
+                    title: 'QYAC Transparency',
+                    heat: 70,
+                    summary: "Increasing community pressure for QYAC to 'lift its game' regarding decision transparency and member communication.",
+                    reporting_angle: "Create a 'Council Watch' segment. Visualize budget allocations. Avoid hearsay; rely on document requests and official statements."
+                },
+                {
+                    id: 'parking',
+                    title: 'Ferry Terminal Parking',
+                    heat: 65,
+                    summary: "Critical shortage of public parking in and surrounding the two ferry terminals. A huge, ongoing frustration for locals and visitors.",
+                    reporting_angle: "Conduct a 'Peak Hour' capacity audit. Map available spots vs. demand. Interview Council regarding expansion plans or shuttle alternatives."
+                },
+                {
+                    id: 'ageing',
+                    title: 'Ageing Population & Care',
+                    heat: 60,
+                    summary: "Increasing need for accessible care services for the island's ageing demographic.",
+                    reporting_angle: "Audit of available aged care beds vs demand. Feature stories on 'ageing in place' challenges and support service gaps."
+                },
+                {
+                    id: 'disaster',
+                    title: 'Disaster Resilience',
+                    heat: 75,
+                    summary: "Vulnerability to bushfires, cyclones, and coastal erosion remains a top priority. Prevention vs. Reaction.",
+                    reporting_angle: "Produce visual emergency prep guides. Interview SES/Fire services. Investigative piece on erosion zones and mitigation funding."
+                },
+                {
+                    id: 'gentrification',
+                    title: 'Tourism vs. Gentrification',
+                    heat: 80,
+                    summary: "The delicate balance between sustainable tourism revenue and locals being priced out of housing and services.",
+                    reporting_angle: "Cost of living analysis. Compare Airbnb density maps with long-term rental availability. Host forums on 'Sustainable Growth'."
+                },
+                {
+                    id: 'energy',
+                    title: 'Energy Sovereignty',
+                    heat: 50,
+                    summary: "Push for clean, affordable, and locally controlled energy solutions to reduce reliance on mainland grid/prices.",
+                    reporting_angle: "Investigate community battery trials and solar incentives. Report on potential cost-saving initiatives for residents."
+                },
+                {
+                    id: 'transport_tech',
+                    title: 'Transport Innovation Sandbox',
+                    heat: 55,
+                    summary: "Addressing critical transport shortfalls. Proposal for a 24-hour driverless car/taxi/minivan trial sandbox.",
+                    reporting_angle: "Tech feasibility study features. Interview transport partners/tech startups about the 'Sandbox' trial concept and safety."
+                },
+                {
+                    id: 'jobs',
+                    title: 'Jobs & Training',
+                    heat: 70,
+                    summary: "Critical need for local employment pathways beyond seasonal tourism. Focusing on long-term careers.",
+                    reporting_angle: "Track metrics on new Arts/Media jobs created by this initiative. Highlight vocational training grants and apprenticeships."
+                }
+            ]
+        };
+
+        // --- NAVIGATION LOGIC ---
+        const views = [
+            { id: 'stakeholders', label: 'Stakeholder Ecosystem' },
+            { id: 'content', label: 'Content & Grants' },
+            { id: 'issues', label: 'Community Pulse' },
+            { id: 'roadmap', label: 'Launch Roadmap' }
+        ];
+
+        function initNav() {
+            const container = document.getElementById('nav-container');
+            const mobileContainer = document.getElementById('mobile-nav-container');
+            
+            views.forEach(view => {
+                // Desktop
+                const btn = document.createElement('button');
+                btn.className = `nav-item text-base font-medium transition-colors duration-200 hover:text-straddie-primary ${appData.currentView === view.id ? 'active-tab' : 'text-slate-500'}`;
+                btn.innerText = view.label;
+                btn.onclick = () => switchView(view.id);
+                container.appendChild(btn);
+
+                // Mobile
+                const mBtn = document.createElement('button');
+                mBtn.className = "block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 w-full text-left";
+                mBtn.innerText = view.label;
+                mBtn.onclick = () => {
+                    switchView(view.id);
+                    document.getElementById('mobile-menu').classList.add('hidden');
+                };
+                mobileContainer.appendChild(mBtn);
+            });
+
+            // Mobile toggle
+            document.getElementById('mobile-menu-btn').onclick = () => {
+                document.getElementById('mobile-menu').classList.toggle('hidden');
+            };
+        }
+
+        function switchView(viewId) {
+            appData.currentView = viewId;
+            // Update Nav State
+            const btns = document.getElementById('nav-container').children;
+            Array.from(btns).forEach((btn, idx) => {
+                btn.className = `nav-item text-base font-medium transition-colors duration-200 hover:text-straddie-primary ${views[idx].id === viewId ? 'active-tab' : 'text-slate-500'}`;
+            });
+            
+            renderView();
+        }
+
+        // --- RENDER LOGIC ---
+
+        function renderView() {
+            const container = document.getElementById('app-view');
+            container.style.opacity = '0';
+            
+            setTimeout(() => {
+                container.innerHTML = ''; // Clear current
+
+                switch(appData.currentView) {
+                    case 'stakeholders':
+                        renderStakeholders(container);
+                        break;
+                    case 'content':
+                        renderContentGrants(container);
+                        break;
+                    case 'issues':
+                        renderIssues(container);
+                        break;
+                    case 'roadmap':
+                        renderRoadmap(container);
+                        break;
+                }
+                
+                // Re-trigger Chart.js if needed
+                if(appData.currentView === 'content') {
+                    initContentCharts();
+                }
+
+                container.style.opacity = '1';
+            }, 200);
+        }
+
+        // --- VIEW 1: STAKEHOLDERS ---
+        function renderStakeholders(container) {
+            let html = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left: Explanation -->
+                    <div class="lg:col-span-1">
+                        <div class="sticky top-24">
+                            <h2 class="text-3xl font-display font-bold mb-4 text-slate-900">Stakeholder Map</h2>
+                            <p class="text-straddie-text-muted mb-8 text-fine leading-relaxed">
+                                Building trust is the first step. This matrix identifies key community pillars. 
+                                The strategy involves onboarding <strong class="text-slate-900">MMEICAC</strong> for cultural legitimacy and 
+                                addressing <strong class="text-slate-900">QYAC's</strong> transparency challenges constructively.
+                                Business integration drives revenue.
+                            </p>
+                            <div class="bg-sky-50 p-6 rounded-xl border border-sky-100">
+                                <h3 class="font-bold text-sky-900 mb-3 font-display">Job Creation Goals</h3>
+                                <ul class="space-y-2 text-fine text-sky-800">
+                                    <li class="flex items-start"><span class="mr-2 text-sky-500">●</span> Junior Videographers (Traineeships)</li>
+                                    <li class="flex items-start"><span class="mr-2 text-sky-500">●</span> Community Journalists</li>
+                                    <li class="flex items-start"><span class="mr-2 text-sky-500">●</span> Indigenous Language Translators</li>
+                                    <li class="flex items-start"><span class="mr-2 text-sky-500">●</span> Event Hosts/Emcees</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Interactive Grid -->
+                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            `;
+
+            appData.stakeholders.forEach(s => {
+                html += `
+                    <div onclick="showStakeholderDetail('${s.id}')" class="card-base p-6 cursor-pointer card-hover">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-slate-200">${s.type}</span>
+                            <span class="text-xs text-straddie-primary font-bold bg-sky-50 px-2 py-1 rounded border border-sky-100">${s.status}</span>
+                        </div>
+                        <h3 class="text-xl font-display font-bold text-slate-900 mb-1">${s.name}</h3>
+                        <p class="text-sm text-slate-500 mb-5">${s.full_name}</p>
+                        <div class="text-fine text-slate-600 border-t border-slate-100 pt-4 mt-auto">
+                            <strong class="text-slate-900">Key Focus:</strong> ${s.role}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>
+                <!-- Detail Modal Area (Inline) -->
+                <div id="stakeholder-detail" class="mt-10 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden hidden animate-fade-in ring-1 ring-slate-900/5">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                        <h3 id="sh-title" class="text-2xl font-display font-bold text-slate-800"></h3>
+                        <button onclick="document.getElementById('stakeholder-detail').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Engagement Strategy</h4>
+                            <p id="sh-strategy" class="text-slate-700 text-fine leading-relaxed"></p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Grant Synergy</h4>
+                            <p id="sh-grant" class="text-straddie-primary font-semibold text-lg"></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        window.showStakeholderDetail = (id) => {
+            const sh = appData.stakeholders.find(s => s.id === id);
+            const detailBox = document.getElementById('stakeholder-detail');
+            document.getElementById('sh-title').innerText = sh.name;
+            document.getElementById('sh-strategy').innerText = sh.strategy;
+            document.getElementById('sh-grant').innerText = sh.grant_link;
+            detailBox.classList.remove('hidden');
+            detailBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // --- VIEW 2: CONTENT & GRANTS ---
+        function renderContentGrants(container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    
+                    <!-- Section 1: Content Mix -->
+                    <div class="card-base p-8">
+                        <h2 class="text-2xl font-display font-bold mb-4 text-slate-900">Content Programming</h2>
+                        <p class="text-fine text-slate-600 mb-6">
+                            Balancing hard news with "Edutainment", Arts, and Sports is crucial for audience retention. 
+                            <span class="text-slate-400 italic">(Hover segments for details)</span>
+                        </p>
+                        <div class="chart-container">
+                            <canvas id="contentChart"></canvas>
+                        </div>
+                        <div id="content-desc" class="mt-6 p-4 bg-slate-50 rounded-lg text-center text-sm font-medium text-slate-600 border border-slate-100 min-h-[5rem] flex items-center justify-center">
+                            Interact with the chart to see content details.
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Funding & Grants -->
+                    <div class="card-base p-8">
+                        <h2 class="text-2xl font-display font-bold mb-4 text-slate-900">Funding & Grants Strategy</h2>
+                        <p class="text-fine text-slate-600 mb-6">
+                            Identified grants target Arts, Indigenous Languages, and Regional development.
+                        </p>
+                        <div class="chart-container">
+                            <canvas id="grantChart"></canvas>
+                        </div>
+                        <div class="mt-8 space-y-3">
+                            <h3 class="font-bold text-slate-800 font-display">Grant Opportunities List</h3>
+                            <ul class="space-y-3">
+                                <li class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg shadow-sm">
+                                    <span class="text-fine font-medium text-slate-700">🎨 Arts Queensland (RADF)</span>
+                                    <span class="font-mono text-emerald-600 font-bold">$25k</span>
+                                </li>
+                                <li class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg shadow-sm">
+                                    <span class="text-fine font-medium text-slate-700">🗣️ Indigenous Languages & Arts</span>
+                                    <span class="font-mono text-emerald-600 font-bold">$40k</span>
+                                </li>
+                                <li class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg shadow-sm">
+                                    <span class="text-fine font-medium text-slate-700">🏗️ Building Better Regions</span>
+                                    <span class="font-mono text-emerald-600 font-bold">$50k</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function initContentCharts() {
+            // Colors from new palette
+            const colors = ['#1E293B', '#F59E0B', '#0284C7', '#65A30D', '#F97316'];
+            
+            // Doughnut Chart
+            const ctxContent = document.getElementById('contentChart').getContext('2d');
+            new Chart(ctxContent, {
+                type: 'doughnut',
+                data: {
+                    labels: appData.contentStrategy.labels,
+                    datasets: [{
+                        data: appData.contentStrategy.data,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter', size: 12 },
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1E293B',
+                            padding: 12,
+                            titleFont: { family: 'Manrope', size: 14 },
+                            bodyFont: { family: 'Inter', size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    document.getElementById('content-desc').innerText = appData.contentStrategy.descriptions[index];
+                                    return ' ' + context.label + ': ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Bar Chart
+            const ctxGrant = document.getElementById('grantChart').getContext('2d');
+            new Chart(ctxGrant, {
+                type: 'bar',
+                data: {
+                    labels: appData.grants.map(g => g.category),
+                    datasets: [{
+                        label: 'Estimated Funding Pool ($)',
+                        data: appData.grants.map(g => g.value),
+                        backgroundColor: '#64748B',
+                        borderRadius: 6,
+                        hoverBackgroundColor: '#0284C7'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: '#F1F5F9' },
+                            ticks: { font: { family: 'Inter' } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Inter' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1E293B',
+                            titleFont: { family: 'Manrope' },
+                            bodyFont: { family: 'Inter' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- VIEW 3: ISSUES (Community Pulse) ---
+        function renderIssues(container) {
+            let html = `
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-display font-bold mb-4 text-slate-900">Community Pulse & Integrity</h2>
+                    <p class="text-slate-600 mb-10 text-lg leading-relaxed">
+                        Straddie News must navigate divisive topics ("Whale on a Hill", QYAC transparency) with neutrality.
+                        This dashboard tracks sentiment "heat" and defines the editorial approach for each.
+                    </p>
+
+                    <div class="space-y-6">
+            `;
+
+            appData.hotTopics.forEach(topic => {
+                // Determine color based on heat
+                let barColor = 'bg-emerald-500';
+                let heatText = 'Moderate';
+                if(topic.heat > 50) { barColor = 'bg-amber-400'; heatText = 'Elevated'; }
+                if(topic.heat > 75) { barColor = 'bg-rose-500'; heatText = 'High Conflict'; }
+
+                html += `
+                    <div class="card-base p-6 md:p-8">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                            <h3 class="text-xl font-display font-bold text-slate-800">${topic.title}</h3>
+                            <div class="flex items-center mt-3 md:mt-0 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+                                <span class="text-xs font-bold text-slate-500 mr-3 uppercase tracking-wider">Heat Level</span>
+                                <div class="w-32 h-2.5 bg-slate-200 rounded-full overflow-hidden mr-3">
+                                    <div class="${barColor} h-full" style="width: ${topic.heat}%"></div>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700">${heatText}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="relative pl-4 border-l-2 border-slate-200">
+                                <h4 class="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">The Conflict</h4>
+                                <p class="text-fine text-slate-700">${topic.summary}</p>
+                            </div>
+                            <div class="relative pl-4 border-l-2 border-straddie-primary bg-sky-50/50 rounded-r-lg p-2">
+                                <h4 class="text-xs font-bold text-straddie-primary uppercase mb-2 tracking-wider">Editorial Strategy</h4>
+                                <p class="text-fine text-slate-800 font-medium">${topic.reporting_angle}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
+
+        // --- VIEW 4: ROADMAP ---
+        function renderRoadmap(container) {
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-3xl font-display font-bold mb-6 text-slate-900">Strategic Execution Milestones</h2>
+                    <p class="text-slate-600 mb-10 text-lg font-light border-l-4 border-amber-400 pl-4 bg-amber-50 py-2 rounded-r-lg">
+                        Accelerated deployment plan. Phases are execution blocks, run in parallel.
+                    </p>
+                    <div class="relative border-l-2 border-slate-200 ml-6 space-y-16 pb-12">
+                        
+                        <!-- Phase 1 -->
+                        <div class="relative pl-12">
+                            <span class="absolute -left-3.5 top-0 w-7 h-7 bg-slate-500 rounded-full border-4 border-white shadow-sm"></span>
+                            <h3 class="font-display font-bold text-2xl text-slate-900 mb-4">Phase 1: Mobilization, Audit & Capital</h3>
+                            <div class="card-base p-8 bg-white">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div>
+                                        <h4 class="font-bold text-xs uppercase text-slate-400 mb-4 tracking-widest border-b pb-2">Research & Intelligence</h4>
+                                        <ul class="space-y-3">
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-slate-400 mt-1">●</span><span><strong>Complete Media Audit:</strong> Catalog all existing newsletters, club emails, podcasts, and social pages.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-slate-400 mt-1">●</span><span><strong>Stakeholder Mapping:</strong> Identify key contacts in MMEICAC, QYAC, and Chamber.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-slate-400 mt-1">●</span><span><strong>Grant Writing Sprint:</strong> Draft submissions for Arts QLD, Indigenous Languages, and Gambling Community Benefit Fund.</span></li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-xs uppercase text-slate-400 mb-4 tracking-widest border-b pb-2">Infrastructure & Tech</h4>
+                                        <ul class="space-y-3">
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-slate-400 mt-1">●</span><span><strong>Studio Setup:</strong> Acquire audio/video gear. Secure green screen location.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-slate-400 mt-1">●</span><span><strong>Digital Footprint:</strong> Secure domains, social handles, and podcast feeds.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-slate-400 mt-1">●</span><span><strong>Data Prep:</strong> Set up tracking for "Ferry Terminal Parking" capacity audit.</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phase 2 -->
+                        <div class="relative pl-12">
+                            <span class="absolute -left-3.5 top-0 w-7 h-7 bg-straddie-primary rounded-full border-4 border-white shadow-sm"></span>
+                            <h3 class="font-display font-bold text-2xl text-slate-900 mb-4">Phase 2: Production, Pilots & Innovation</h3>
+                            <div class="card-base p-8 bg-white">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div>
+                                        <h4 class="font-bold text-xs uppercase text-straddie-primary mb-4 tracking-widest border-b border-sky-100 pb-2">Content Pilots</h4>
+                                        <ul class="space-y-3">
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-sky-400 mt-1">●</span><span><strong>"Whale on a Hill":</strong> Record moderated Town Hall with Elders & Community.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-sky-400 mt-1">●</span><span><strong>Council Watch:</strong> Produce first "Budget Visualized" segment for QYAC transparency.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-sky-400 mt-1">●</span><span><strong>Arts Segue:</strong> Film 5x "Island Artist" profiles for video transitions.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-sky-400 mt-1">●</span><span><strong>Parking Audit:</strong> Execute peak-hour drone count/survey at ferry terminals.</span></li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-xs uppercase text-straddie-primary mb-4 tracking-widest border-b border-sky-100 pb-2">Strategic Initiatives</h4>
+                                        <ul class="space-y-3">
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-sky-400 mt-1">●</span><span><strong>Transport Sandbox:</strong> Draft proposal for 24hr driverless minivan trial; pitch to Tech partners.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-sky-400 mt-1">●</span><span><strong>Job Creation:</strong> Onboard first cohort of junior videographers/trainees.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-sky-400 mt-1">●</span><span><strong>MMEICAC Partnership:</strong> Formalize MOU for language content preservation.</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phase 3 -->
+                        <div class="relative pl-12">
+                            <span class="absolute -left-3.5 top-0 w-7 h-7 bg-straddie-secondary rounded-full border-4 border-white shadow-sm"></span>
+                            <h3 class="font-display font-bold text-2xl text-slate-900 mb-4">Phase 3: Broadcast, Scale & Sovereignty</h3>
+                            <div class="card-base p-8 bg-white">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div>
+                                        <h4 class="font-bold text-xs uppercase text-emerald-600 mb-4 tracking-widest border-b border-emerald-100 pb-2">Go Live</h4>
+                                        <ul class="space-y-3">
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-emerald-400 mt-1">●</span><span><strong>Full Launch:</strong> Simultaneous premiere of YouTube Channel, Podcast, and Website.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-emerald-400 mt-1">●</span><span><strong>Event Coverage:</strong> Live reporting from Cinema & Comedy festivals.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-emerald-400 mt-1">●</span><span><strong>Disaster Guides:</strong> Distribute "Bushfire & Cyclone" visual preparation packs.</span></li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-xs uppercase text-emerald-600 mb-4 tracking-widest border-b border-emerald-100 pb-2">Long-Term Impact</h4>
+                                        <ul class="space-y-3">
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-emerald-400 mt-1">●</span><span><strong>Energy Forum:</strong> Host "Island Energy Sovereignty" summit.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-emerald-400 mt-1">●</span><span><strong>Sustainable Revenue:</strong> Activate local business ad network & tourism board integration.</span></li>
+                                            <li class="flex items-start text-fine text-slate-700"><span class="mr-3 text-emerald-400 mt-1">●</span><span><strong>Housing Watch:</strong> Publish "Gentrification Heatmap" data story.</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initNav();
+            renderView(); // Default to Stakeholders
+        });
+
+    </script>
+</body>
+</html>
